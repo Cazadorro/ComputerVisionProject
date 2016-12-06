@@ -18,13 +18,24 @@ def main():
     args = parser.parse_args()
     img_file_path = args.picture_path
     image = cv2.imread(img_file_path, cv2.IMREAD_GRAYSCALE)
-    img_blur = cv2.GaussianBlur(image,(11,11),0)
+    img_blur = cv2.GaussianBlur(image, (11, 11), 0)
     _, white_img = cv2.threshold(image, 127, 255, cv2.THRESH_BINARY)
     _, white_img_blur = cv2.threshold(img_blur, 127, 255, cv2.THRESH_BINARY)
-    skel = np.zeros(image.size, dtype="uint8")
-    temp = np.empty(image.size, dtype="uint8")
+    skel = np.zeros(image.shape, dtype="uint8")
+    temp = np.empty(image.shape, dtype="uint8")
     # structure elements are just numpy arrays, this one looks like a cross (a plus symbol)
-    element = cv2.getStructuringElement(cv2.MORPH_CROSS, (3,3))
+    element = cv2.getStructuringElement(cv2.MORPH_CROSS, (3, 3))
+    done = False
+    while not done:
+        cv2.morphologyEx(image, cv2.MORPH_OPEN, element, temp)
+        cv2.bitwise_not(temp, temp)
+        temp = cv2.bitwise_and(image, temp)
+        cv2.bitwise_or(skel, temp, skel)
+        cv2.erode(image, image, element)
+        (minval, maxval, minloc, maxloc) = cv2.minMaxLoc(image)
+        done = (maxval == 0)
+    cv2.imshow("images", skel)
+    cv2.waitKey(0)
 
 
 
