@@ -17,7 +17,7 @@ def parse_args():
     args = parser.parse_args()
     return args
 
-def get_skelliton(image):
+def get_skeleton(image):
     skel = np.zeros(image.shape, dtype="uint8")
     temp = np.empty(image.shape, dtype="uint8")
     eroded = np.empty(image.shape, dtype="uint8")
@@ -50,16 +50,19 @@ def main():
     cv2.imshow("image", image)
     cv2.waitKey(0)
     # img_blur = cv2.GaussianBlur(image, (3, 3), 0)
-    _, white_image = cv2.threshold(image, 200, 255, cv2.THRESH_BINARY)
+    _, white_image = cv2.threshold(image, 170, 255, cv2.THRESH_BINARY)
     cv2.imshow("image", white_image)
     cv2.waitKey(0)
-    white_image = cv2.GaussianBlur(white_image, (3, 3), 0)
+    white_image = cv2.GaussianBlur(white_image, (5, 5), 10)
     cv2.imshow("image", white_image)
     cv2.waitKey(0)
-
-    skelliton = get_skelliton(white_image)
-    cv2.imshow("image", skelliton)
+    _, white_image = cv2.threshold(white_image, 170, 255, cv2.THRESH_BINARY)
+    cv2.imshow("image", white_image)
     cv2.waitKey(0)
+    skeleton = get_skeleton(white_image)
+    cv2.imshow("image", skeleton)
+    cv2.waitKey(0)
+    cv2.imwrite("skeleton", skeleton)
 
 
 
