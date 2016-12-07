@@ -10,79 +10,57 @@ import cv2
 # CV_8UC1 is a 8bit one channel color
 CVINT = "uint8"
 
-
-def main():
+def parse_args():
     parser = argparse.ArgumentParser(description='get config input')
-    parser.add_argument('picture_path', metavar='path', type=str,
+    parser.add_argument('image_path', metavar='path', type=str,
                         help='picture file path')
     args = parser.parse_args()
-    img_file_path = args.picture_path
-    image = cv2.imread(img_file_path, cv2.IMREAD_GRAYSCALE)
-    img_blur = cv2.GaussianBlur(image, (3, 3), 0)
-    image = img_blur
-    cv2.imshow("images", image)
-    cv2.waitKey(0)
-    _, white_img = cv2.threshold(image, 127, 255, cv2.THRESH_BINARY)
-    _, white_img_blur = cv2.threshold(img_blur, 127, 255, cv2.THRESH_BINARY)
+    return args
+
+def get_skelliton(image):
     skel = np.zeros(image.shape, dtype="uint8")
     temp = np.empty(image.shape, dtype="uint8")
+    eroded = np.empty(image.shape, dtype="uint8")
     # structure elements are just numpy arrays, this one looks like a cross (a plus symbol)
     element = cv2.getStructuringElement(cv2.MORPH_CROSS, (3, 3))
     done = False
-    show = False
-
-
     while not done:
-        print("HELLO")
-        temp = cv2.morphologyEx(image, cv2.MORPH_OPEN, element)
-        if show:
-            cv2.imshow("tem,p", temp)
-            cv2.waitKey(0)
-        temp = cv2.bitwise_not(temp)
-        if show:
-            cv2.imshow("temp", temp)
-            cv2.waitKey(0)
-        temp = cv2.bitwise_and(image, temp)
-        if show:
-            cv2.imshow("temp", temp)
-            cv2.waitKey(0)
-        skel = cv2.bitwise_or(skel, temp)
-        if show:
-            cv2.imshow("skel", skel)
-            cv2.waitKey(0)
-        image = cv2.erode(image, element)
-        if show:
-            cv2.imshow("images", image)
-            cv2.waitKey(0)
-        (minval, maxval, minloc, maxloc) = cv2.minMaxLoc(image)
-        done = (maxval == 0)
-        print(maxval)
-        if maxval == 34:
-            show = True
-    cv2.imshow("images", skel)
+        #create an eroded version of the image
+        cv2.erode(image, element, eroded)
+        #dilate back out
+        cv2.dilate(eroded, element, temp)
+        # subtract the dilated version from the original version of the image
+        cv2.subtract(image, temp, temp)
+        # take the skelliton of the image and or it with the dilated subtraction
+        cv2.bitwise_or(skel, temp, skel)
+        # copy the eroded version to image.
+        image = np.copy(eroded)
+        # check if nonzero, if zero, we know we have only one pixel thick lines
+        nonzero = cv2.countNonZero(image)
+        done = (nonzero == 0)
+        print(nonzero)
+    return skel
+
+def main():
+    # getting initial image
+    args = parse_args()
+    image_path = args.image_path
+    image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+    image = cv2.GaussianBlur(image, (11, 11), 0)
+    cv2.imshow("image", image)
+    cv2.waitKey(0)
+    # img_blur = cv2.GaussianBlur(image, (3, 3), 0)
+    _, white_image = cv2.threshold(image, 200, 255, cv2.THRESH_BINARY)
+    cv2.imshow("image", white_image)
+    cv2.waitKey(0)
+    white_image = cv2.GaussianBlur(white_image, (3, 3), 0)
+    cv2.imshow("image", white_image)
     cv2.waitKey(0)
 
+    skelliton = get_skelliton(white_image)
+    cv2.imshow("image", skelliton)
+    cv2.waitKey(0)
 
-
-    adaptive_white = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-                                           cv2.THRESH_BINARY, 21, 2)
-    # bgr min bgr max
-    boundaries = [([200, 200, 200], [255, 255, 255])]
-
-    for (lower, upper) in boundaries:
-        lower = np.array(lower, dtype=CVINT)
-        upper = np.array(upper, dtype=CVINT)
-
-        # mask = cv2.inRange(image, lower, upper)
-        # output = cv2.bitwise_and(image, image, mask=mask)
-
-        # show the images
-        # cv2.imshow("images", np.hstack([image, output]))
-        cv2.imshow("images", white_img)
-        cv2.waitKey(0)
-        cv2.imshow("images", white_img_blur)
-        cv2.waitKey(0)
-    pass
 
 
 if __name__ == "__main__":
