@@ -18,51 +18,55 @@ def main():
     args = parser.parse_args()
     img_file_path = args.picture_path
     image = cv2.imread(img_file_path, cv2.IMREAD_GRAYSCALE)
-    img_blur = cv2.GaussianBlur(image, (3, 3), 0)
-    image = img_blur
-    cv2.imshow("images", image)
+    img_blur = cv2.GaussianBlur(image, (21, 21), 0)
+    #cv2.equalizeHist(img_blur, img_blur)
+
+
+    cv2.imshow("image", img_blur)
     cv2.waitKey(0)
     _, white_img = cv2.threshold(image, 127, 255, cv2.THRESH_BINARY)
-    _, white_img_blur = cv2.threshold(img_blur, 127, 255, cv2.THRESH_BINARY)
+    #image = white_img
+    _, white_img_blur = cv2.threshold(img_blur, 180, 255, cv2.THRESH_BINARY)
+    image = white_img_blur
     skel = np.zeros(image.shape, dtype="uint8")
     temp = np.empty(image.shape, dtype="uint8")
+    eroded = np.empty(image.shape, dtype="uint8")
     # structure elements are just numpy arrays, this one looks like a cross (a plus symbol)
     element = cv2.getStructuringElement(cv2.MORPH_CROSS, (3, 3))
+    print(element)
     done = False
     show = False
 
-
     while not done:
-        print("HELLO")
-        temp = cv2.morphologyEx(image, cv2.MORPH_OPEN, element)
+        cv2.erode(image, element, eroded)
         if show:
-            cv2.imshow("tem,p", temp)
+            print("eroded")
+            cv2.imshow("image", eroded)
             cv2.waitKey(0)
-        temp = cv2.bitwise_not(temp)
+        cv2.dilate(eroded, element, temp)
         if show:
-            cv2.imshow("temp", temp)
+            print("dilated temp")
+            cv2.imshow("image", temp)
             cv2.waitKey(0)
-        temp = cv2.bitwise_and(image, temp)
+        cv2.subtract(image, temp, temp)
         if show:
-            cv2.imshow("temp", temp)
+            print("subtracted temp")
+            cv2.imshow("image", temp)
             cv2.waitKey(0)
-        skel = cv2.bitwise_or(skel, temp)
+        skel = cv2.bitwise_or(skel, temp, skel)
         if show:
-            cv2.imshow("skel", skel)
+            print("subtracted skel")
+            cv2.imshow("image", skel)
             cv2.waitKey(0)
-        image = cv2.erode(image, element)
-        if show:
-            cv2.imshow("images", image)
-            cv2.waitKey(0)
-        (minval, maxval, minloc, maxloc) = cv2.minMaxLoc(image)
-        done = (maxval == 0)
-        print(maxval)
-        if maxval == 34:
-            show = True
+        image = np.copy(eroded)
+
+        nonzero = cv2.countNonZero(image)
+        done = (nonzero == 0)
+        print(nonzero)
+        # cv2.imshow("images", skel)
+        # cv2.waitKey(0)
     cv2.imshow("images", skel)
     cv2.waitKey(0)
-
-
 
     adaptive_white = cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
                                            cv2.THRESH_BINARY, 21, 2)
