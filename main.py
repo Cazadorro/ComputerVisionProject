@@ -60,9 +60,11 @@ def main():
     cv2.imshow("image", white_image)
     cv2.waitKey(0)
     skeleton = get_skeleton(white_image)
+    element = cv2.getStructuringElement(cv2.MORPH_CROSS, (3, 3))
+    cv2.dilate(skeleton, element, skeleton, iterations=2)
     cv2.imshow("image", skeleton)
     cv2.waitKey(0)
-    cv2.imwrite("skeleton", skeleton)
+    cv2.imwrite("skeleton.png", skeleton)
 
 
 

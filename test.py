@@ -4,7 +4,7 @@ import numpy as np
 
 def run():
     MUL = 1
-    image = cv2.imread("IMG_3618_WHITER.png", cv2.IMREAD_GRAYSCALE)
+    image = cv2.imread("skeleton.png", cv2.IMREAD_GRAYSCALE)
     src_pts = np.array([[24, 601], [457, 597], [404, 493], [79, 491]])
     dst_pts = np.array([[2* MUL, 58 * MUL], [23 * MUL, 58 * MUL] ,[23 * MUL, 47 *MUL], [2 * MUL, 47 *MUL]])
 
@@ -19,7 +19,7 @@ def run():
     im_dst = cv2.warpPerspective(image, h, (24 * MUL, 60 *MUL))
     #im_dst[:10, :] = 0
 
-    cv2.imwrite("here.jpg", im_dst)
+    cv2.imwrite("test_line.jpg", im_dst)
 
 
 if __name__ == "__main__":
